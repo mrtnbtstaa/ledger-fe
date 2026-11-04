@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { config } from "@/lib/config";
 
 export type BackendStatus = "unknown" | "waking" | "ready" | "unreachable";
@@ -18,7 +18,6 @@ export function BackendStatusProvider({ children }: { children: React.ReactNode 
   const [status, setStatus] = useState<BackendStatus>(config.useMock ? "ready" : "unknown");
   const [waitedMs, setWaitedMs] = useState(0);
   const [attempt, setAttempt] = useState(0);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     if (config.useMock) return;
@@ -26,6 +25,7 @@ export function BackendStatusProvider({ children }: { children: React.ReactNode 
     let cancelled = false;
     let step = 0;
     const startedAt = Date.now();
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
     const probe = async () => {
       try {
@@ -52,15 +52,14 @@ export function BackendStatusProvider({ children }: { children: React.ReactNode 
       setStatus("waking");
       const delay = RETRY_DELAYS_MS[Math.min(step, RETRY_DELAYS_MS.length - 1)]!;
       step += 1;
-      timers.current.push(setTimeout(() => void probe(), delay));
+      timers.push(setTimeout(() => void probe(), delay));
     };
 
     void probe();
 
     return () => {
       cancelled = true;
-      timers.current.forEach(clearTimeout);
-      timers.current = [];
+      timers.forEach(clearTimeout);
     };
   }, [attempt]);
 

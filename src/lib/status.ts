@@ -13,10 +13,6 @@ export const STATUS: Record<ReceiptStatus, StatusTone> = {
   failed: { label: "Failed", icon: CircleAlert, className: "bg-danger-soft text-danger" },
 };
 
-export const isTerminal = (status: ReceiptStatus) => status !== "processing";
-
-export const statusLabel = (status: ReceiptStatus) => STATUS[status].label;
-
 export const STAGES = ["uploading", "extracting", "validating", "done"] as const;
 
 export const STAGE_LABELS = {

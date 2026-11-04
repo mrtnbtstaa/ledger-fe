@@ -23,7 +23,7 @@ const byStatus: Record<number, string> = {
 };
 
 export function normalizeError(status: number, body: unknown): ApiFailure {
-  const code = byStatus[status] ?? (status >= 500 ? "server" : "server");
+  const code = byStatus[status] ?? "server";
   const retryAfter =
     body && typeof body === "object" && "error" in body
       ? Number((body as { error?: { retryAfter?: unknown } }).error?.retryAfter) || undefined

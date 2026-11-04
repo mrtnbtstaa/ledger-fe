@@ -5,7 +5,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { buttonClass } from "@/components/ui/button";
 import { ErrorState } from "@/components/common/ErrorState";
 import { useDecideReceipt, useSaveFields } from "@/hooks/useReviewActions";
-import { withRetryHint, type ApiFailure } from "@/lib/api/errors";
+import { withRetryHint } from "@/lib/api/errors";
 import type { Receipt } from "@/lib/api/types";
 import { fromFormValues, receiptFormSchema, toFormValues, type ReceiptFormValues } from "@/lib/validation/receipt-form";
 
@@ -13,6 +13,18 @@ const input =
   "mt-1 block min-h-11 w-full rounded-sm border border-line bg-surface px-3 text-ink placeholder:text-ink-muted";
 
 const toNumber = (value: unknown) => (value === "" || value === null || value === undefined ? null : Number(value));
+
+const totals = [
+  { name: "subtotal", label: "Subtotal" },
+  { name: "tax", label: "Tax" },
+  { name: "total", label: "Total" },
+] as const;
+
+const itemNumbers = [
+  { name: "quantity", label: "Qty", step: "1" },
+  { name: "unitPrice", label: "Unit price", step: "0.01" },
+  { name: "lineTotal", label: "Line total", step: "0.01" },
+] as const;
 
 export function ReviewEditForm({ receipt }: { receipt: Receipt }) {
   const save = useSaveFields(receipt.id);
@@ -25,7 +37,7 @@ export function ReviewEditForm({ receipt }: { receipt: Receipt }) {
   const { register, handleSubmit, control, formState } = form;
   const { fields } = useFieldArray({ control, name: "lineItems" });
   const reviewable = receipt.status === "needs_review";
-  const failure = (save.error ?? decide.error) as ApiFailure | null;
+  const failure = save.error ?? decide.error;
 
   return (
     <form
@@ -55,36 +67,18 @@ export function ReviewEditForm({ receipt }: { receipt: Receipt }) {
           <input {...register("currency")} className={`${input} font-mono uppercase`} maxLength={3} autoComplete="off" />
         </label>
         <div className="grid grid-cols-3 gap-2 sm:col-span-2">
-          <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted">Subtotal</span>
-            <input
-              type="number"
-              step="0.01"
-              inputMode="decimal"
-              {...register("subtotal", { setValueAs: toNumber })}
-              className={`${input} text-right font-mono tabular-nums`}
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted">Tax</span>
-            <input
-              type="number"
-              step="0.01"
-              inputMode="decimal"
-              {...register("tax", { setValueAs: toNumber })}
-              className={`${input} text-right font-mono tabular-nums`}
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted">Total</span>
-            <input
-              type="number"
-              step="0.01"
-              inputMode="decimal"
-              {...register("total", { setValueAs: toNumber })}
-              className={`${input} text-right font-mono tabular-nums`}
-            />
-          </label>
+          {totals.map((field) => (
+            <label key={field.name} className="block">
+              <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted">{field.label}</span>
+              <input
+                type="number"
+                step="0.01"
+                inputMode="decimal"
+                {...register(field.name, { setValueAs: toNumber })}
+                className={`${input} text-right font-mono tabular-nums`}
+              />
+            </label>
+          ))}
         </div>
       </div>
 
@@ -108,33 +102,17 @@ export function ReviewEditForm({ receipt }: { receipt: Receipt }) {
                   </p>
                 ) : null}
               </label>
-              <label className="block">
-                <span className="text-xs text-ink-muted sm:sr-only">Qty</span>
-                <input
-                  type="number"
-                  step="1"
-                  {...register(`lineItems.${index}.quantity`, { setValueAs: toNumber })}
-                  className={`${input} text-right font-mono tabular-nums`}
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs text-ink-muted sm:sr-only">Unit price</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register(`lineItems.${index}.unitPrice`, { setValueAs: toNumber })}
-                  className={`${input} text-right font-mono tabular-nums`}
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs text-ink-muted sm:sr-only">Line total</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register(`lineItems.${index}.lineTotal`, { setValueAs: toNumber })}
-                  className={`${input} text-right font-mono tabular-nums`}
-                />
-              </label>
+              {itemNumbers.map((column) => (
+                <label key={column.name} className="block">
+                  <span className="text-xs text-ink-muted sm:sr-only">{column.label}</span>
+                  <input
+                    type="number"
+                    step={column.step}
+                    {...register(`lineItems.${index}.${column.name}`, { setValueAs: toNumber })}
+                    className={`${input} text-right font-mono tabular-nums`}
+                  />
+                </label>
+              ))}
             </div>
           ))}
         </div>

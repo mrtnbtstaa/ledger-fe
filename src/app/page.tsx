@@ -44,11 +44,13 @@ export default function HomePage() {
     startUpload(file);
   };
 
-  const sampleFailure = processSample.error;
-  const uploadFailure = upload.error;
-  const receiptFailure = active.error;
-  const failure = uploadFailure ?? sampleFailure ?? receiptFailure;
-  const retry = uploadFailure && selected ? () => startUpload(selected) : receiptFailure ? () => void active.refetch() : undefined;
+  const failure = upload.error ?? processSample.error ?? active.error;
+  const retry =
+    upload.error && selected
+      ? () => startUpload(selected)
+      : active.error
+        ? () => void active.refetch()
+        : undefined;
 
   const blocked = !ready;
 
@@ -119,7 +121,7 @@ export default function HomePage() {
             title="That request did not finish"
             message={withRetryHint(failure)}
             onRetry={retry}
-            retryLabel={uploadFailure ? "Upload again" : "Try again"}
+            retryLabel={upload.error ? "Upload again" : "Try again"}
           />
         </div>
       ) : null}

@@ -53,17 +53,3 @@ export function formatDateTime(value: string): string {
 export function formatConfidence(value: number | null): string {
   return value === null ? "Not found" : value.toFixed(2);
 }
-
-export function formatFileSize(bytes: number): string {
-  return bytes >= 1024 * 1024
-    ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
-
-export function formatDateInput(value: string | null): string {
-  return value ? value.slice(0, 10) : "";
-}
-
-export function formatCurrencyCode(value: string | null): string {
-  return value ?? "Not found";
-}

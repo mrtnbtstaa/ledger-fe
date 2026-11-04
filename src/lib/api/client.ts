@@ -8,8 +8,8 @@ export const api = createClient<paths>({
   fetch: config.useMock ? mockFetch : undefined,
 });
 
-export const READ_TIMEOUT_MS = 15_000;
-export const WRITE_TIMEOUT_MS = 45_000;
+const READ_TIMEOUT_MS = 15_000;
+const WRITE_TIMEOUT_MS = 45_000;
 
 /** Per-request deadline; openapi-fetch has none of its own (FR-022). */
 export const readSignal = () => AbortSignal.timeout?.(READ_TIMEOUT_MS);
