@@ -1,5 +1,5 @@
 import { BadgeCheck, Check, CircleAlert, LoaderCircle, TriangleAlert, X } from "lucide-react";
-import type { ReceiptStatus } from "./api/types";
+import type { ReceiptStage, ReceiptStatus } from "./api/types";
 
 type StatusTone = { label: string; icon: typeof Check; className: string };
 
@@ -21,3 +21,9 @@ export const STAGE_LABELS = {
   validating: "Validating",
   done: "Done",
 } as const;
+
+/** One line for screen readers; the live region must be mounted before it speaks (DESIGN 403). */
+export function statusAnnouncement(receipt: { status: ReceiptStatus; stage?: ReceiptStage | null }): string {
+  if (receipt.status === "processing") return `Processing: ${STAGE_LABELS[receipt.stage ?? "uploading"]}.`;
+  return `Status: ${STATUS[receipt.status].label}.`;
+}

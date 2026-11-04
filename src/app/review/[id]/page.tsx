@@ -12,6 +12,7 @@ import { ReviewEditForm } from "@/components/review/ReviewEditForm";
 import { useReceipt } from "@/hooks/useReceipt";
 import { withRetryHint } from "@/lib/api/errors";
 import { formatDate } from "@/lib/format";
+import { statusAnnouncement } from "@/lib/status";
 import { Missing } from "@/components/ui/missing";
 
 export default function ReviewDetailPage() {
@@ -22,6 +23,9 @@ export default function ReviewDetailPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1080px] px-4 py-8 sm:px-6 lg:px-8">
+      <p className="sr-only" role="status">
+        {detail ? statusAnnouncement(detail) : ""}
+      </p>
       <p className="text-sm">
         <Link href="/review" className="text-accent underline">
           Back to the queue

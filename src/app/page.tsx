@@ -17,6 +17,7 @@ import { useReceipt } from "@/hooks/useReceipt";
 import { useUploadReceipt } from "@/hooks/useUploadReceipt";
 import { withRetryHint } from "@/lib/api/errors";
 import { config } from "@/lib/config";
+import { statusAnnouncement } from "@/lib/status";
 import { validateFile } from "@/lib/validation/file";
 
 export default function HomePage() {
@@ -33,8 +34,10 @@ export default function HomePage() {
 
   const active = useReceipt(receiptId);
 
-  const startUpload = (file: File) =>
+  const startUpload = (file: File) => {
+    setReceiptId(null);
     upload.mutate(file, { onSuccess: (created) => setReceiptId(created.id) });
+  };
 
   const onSelect = (file: File) => {
     const problem = validateFile(file);
@@ -56,6 +59,9 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto w-full max-w-[1080px] px-4 py-8 sm:px-6 lg:px-8">
+      <p className="sr-only" role="status">
+        {active.data ? statusAnnouncement(active.data) : ""}
+      </p>
       <h1 className="max-w-[24ch] font-serif text-[2rem] leading-[1.1] tracking-[-0.01em] sm:text-4xl lg:text-[3.25rem]">
         A receipt photo in. Checked data out.
       </h1>
@@ -92,9 +98,10 @@ export default function HomePage() {
             ) : (
               <SamplePicker
                 samples={samples.data ?? []}
-                onPick={(sampleId) =>
-                  processSample.mutate(sampleId, { onSuccess: (created) => setReceiptId(created.id) })
-                }
+                onPick={(sampleId) => {
+                  setReceiptId(null);
+                  processSample.mutate(sampleId, { onSuccess: (created) => setReceiptId(created.id) });
+                }}
                 disabled={blocked}
                 pendingId={processSample.isPending ? (processSample.variables ?? null) : null}
               />
@@ -127,7 +134,7 @@ export default function HomePage() {
       ) : null}
 
       {active.data ? (
-        <section className="mt-10" aria-live="polite">
+        <section className="mt-10">
           {active.data.status === "processing" ? (
             <div className="rounded-md border border-line bg-surface p-4">
               <ProcessingStepper stage={active.data.stage ?? "uploading"} />
@@ -143,7 +150,7 @@ export default function HomePage() {
                   <ValidationChecks checks={active.data.checks} />
                 </div>
                 <div className="mt-4 border-t border-line pt-4">
-                  <ConfidenceMeter value={active.data.confidence ?? null} />
+                  <ConfidenceMeter value={active.data.confidence} />
                 </div>
               </div>
               <FilePreview receipt={active.data} />
