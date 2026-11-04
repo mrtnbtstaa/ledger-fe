@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The API types are generated; a stale file means the contract changed without a regen.
+      - run: npm run gen:api
+      - run: git diff --exit-code src/lib/api/schema.d.ts
+
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e

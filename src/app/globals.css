@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f6f3ec;
+  --surface: #fffdf8;
+  --surface-sunken: #ede9df;
+  --ink: #1b1a17;
+  --ink-muted: #5c584e;
+  --line: #d9d3c5;
+  --accent: #1e5b45;
+  --accent-deep: #154634;
+  --accent-soft: #e3efe8;
+  --success: #1e5b45;
+  --success-soft: #e3efe8;
+  --warning: #8a5300;
+  --warning-soft: #fbefd5;
+  --danger: #a32a1f;
+  --danger-soft: #fbe4e0;
+  --info: #234e78;
+  --info-soft: #e1ecf6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #14130f;
+    --surface: #1d1b17;
+    --surface-sunken: #0f0e0b;
+    --ink: #f1ede2;
+    --ink-muted: #b2ac9d;
+    --line: #3a362e;
+    --accent: #6fcb9f;
+    --accent-deep: #8bd8b3;
+    --accent-soft: #17302a;
+    --success: #6fcb9f;
+    --success-soft: #17302a;
+    --warning: #f0b85a;
+    --warning-soft: #33260f;
+    --danger: #ff9c8f;
+    --danger-soft: #3a1b17;
+    --info: #8dbbea;
+    --info-soft: #14263a;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-newsreader);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+    background-color: var(--paper);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--accent-soft);
+  }
+}
+
+/* The receipt's scalloped bottom edge, the one illustrative element in the product. */
+.receipt-edge {
+  position: relative;
+}
+
+.receipt-edge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  height: 8px;
+  background-image: radial-gradient(circle at 4px 0, var(--surface) 4px, transparent 4.5px);
+  background-size: 8px 8px;
+  background-repeat: repeat-x;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

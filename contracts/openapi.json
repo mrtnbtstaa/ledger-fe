@@ -1,0 +1,361 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Receipt Processor API",
+    "version": "0.1.0",
+    "description": "Frontend-consumed contract. Hand-authored from plan.md; reconcile with the backend's exported schema with `npm run gen:api`."
+  },
+  "servers": [{ "url": "http://localhost:8000" }],
+  "tags": [{ "name": "receipts" }],
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": { "type": "string", "examples": ["rate_limited", "unsupported_type"] },
+              "message": { "type": "string" },
+              "retryAfter": { "type": "integer", "description": "Seconds until the client may retry." }
+            }
+          }
+        }
+      },
+      "LineItem": {
+        "type": "object",
+        "required": ["description", "quantity", "unitPrice", "lineTotal"],
+        "properties": {
+          "description": { "type": ["string", "null"] },
+          "quantity": { "type": ["number", "null"] },
+          "unitPrice": { "type": ["number", "null"] },
+          "lineTotal": { "type": ["number", "null"] }
+        }
+      },
+      "ExtractedData": {
+        "type": "object",
+        "required": [
+          "vendor",
+          "date",
+          "dateRaw",
+          "currency",
+          "subtotal",
+          "tax",
+          "total",
+          "category",
+          "lineItems"
+        ],
+        "properties": {
+          "vendor": { "type": ["string", "null"] },
+          "date": { "type": ["string", "null"], "description": "ISO 8601 date when normalized." },
+          "dateRaw": { "type": ["string", "null"], "description": "The date as printed on the receipt." },
+          "currency": { "type": ["string", "null"], "description": "ISO 4217 code." },
+          "subtotal": { "type": ["number", "null"] },
+          "tax": { "type": ["number", "null"] },
+          "total": { "type": ["number", "null"] },
+          "category": { "type": ["string", "null"] },
+          "lineItems": { "type": "array", "items": { "$ref": "#/components/schemas/LineItem" } }
+        }
+      },
+      "ValidationCheck": {
+        "type": "object",
+        "required": ["rule", "description", "passed"],
+        "properties": {
+          "rule": { "type": "string", "examples": ["line_items_sum_to_subtotal"] },
+          "description": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "details": { "type": ["string", "null"] }
+        }
+      },
+      "ReceiptStatus": {
+        "type": "string",
+        "enum": ["processing", "auto_approved", "needs_review", "approved", "rejected", "failed"]
+      },
+      "ReceiptStage": { "type": "string", "enum": ["uploading", "extracting", "validating", "done"] },
+      "Receipt": {
+        "type": "object",
+        "required": [
+          "id",
+          "filename",
+          "fileType",
+          "uploadedAt",
+          "status",
+          "confidence",
+          "fileUrl",
+          "fileExpiresAt",
+          "data",
+          "checks",
+          "cached"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "filename": { "type": "string" },
+          "fileType": { "type": "string", "enum": ["jpg", "png", "pdf"] },
+          "uploadedAt": { "type": "string", "format": "date-time" },
+          "status": { "$ref": "#/components/schemas/ReceiptStatus" },
+          "stage": { "$ref": "#/components/schemas/ReceiptStage" },
+          "confidence": { "type": ["number", "null"] },
+          "fileUrl": { "type": ["string", "null"], "description": "Null once the retained file has expired." },
+          "fileExpiresAt": { "type": ["string", "null"], "format": "date-time" },
+          "data": { "anyOf": [{ "$ref": "#/components/schemas/ExtractedData" }, { "type": "null" }] },
+          "checks": { "type": "array", "items": { "$ref": "#/components/schemas/ValidationCheck" } },
+          "cached": { "type": "boolean" },
+          "failureReason": { "type": ["string", "null"], "description": "Safe, human-readable reason when status is failed." }
+        }
+      },
+      "ReceiptSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "filename",
+          "uploadedAt",
+          "vendor",
+          "date",
+          "total",
+          "currency",
+          "category",
+          "status",
+          "confidence",
+          "failureReason"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "filename": { "type": "string" },
+          "uploadedAt": { "type": "string", "format": "date-time" },
+          "vendor": { "type": ["string", "null"] },
+          "date": { "type": ["string", "null"] },
+          "total": { "type": ["number", "null"] },
+          "currency": { "type": ["string", "null"] },
+          "category": { "type": ["string", "null"] },
+          "status": { "$ref": "#/components/schemas/ReceiptStatus" },
+          "confidence": { "type": ["number", "null"] },
+          "failureReason": { "type": ["string", "null"] }
+        }
+      },
+      "ReceiptList": {
+        "type": "object",
+        "required": ["items", "total"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/ReceiptSummary" } },
+          "total": { "type": "integer" }
+        }
+      },
+      "Sample": {
+        "type": "object",
+        "required": ["id", "label", "description", "expected"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "description": { "type": "string" },
+          "expected": { "type": "string", "enum": ["clean", "fails_validation"] }
+        }
+      },
+      "ReceiptUpdate": {
+        "type": "object",
+        "required": ["data"],
+        "properties": { "data": { "$ref": "#/components/schemas/ExtractedData" } }
+      },
+      "Health": {
+        "type": "object",
+        "required": ["status"],
+        "properties": { "status": { "type": "string", "enum": ["ok"] } }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["receipts"],
+        "summary": "Readiness probe. Wakes a sleeping backend.",
+        "responses": {
+          "200": {
+            "description": "Ready",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } }
+          }
+        }
+      }
+    },
+    "/samples": {
+      "get": {
+        "tags": ["receipts"],
+        "summary": "List built-in sample receipts",
+        "responses": {
+          "200": {
+            "description": "Samples",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Sample" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/samples/{sampleId}/process": {
+      "post": {
+        "tags": ["receipts"],
+        "summary": "Process a sample receipt",
+        "parameters": [
+          { "name": "sampleId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for processing",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
+          },
+          "404": {
+            "description": "Unknown sample",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/upload": {
+      "post": {
+        "tags": ["receipts"],
+        "summary": "Upload a receipt image or PDF",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": { "file": { "type": "string", "format": "binary" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted for processing",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
+          },
+          "400": {
+            "description": "Invalid upload",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "413": {
+            "description": "File too large",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "415": {
+            "description": "Unsupported file type",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/receipts": {
+      "get": {
+        "tags": ["receipts"],
+        "summary": "List receipts",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/ReceiptStatus" }
+          },
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["date", "total"] } },
+          { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Receipts",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ReceiptList" } }
+            }
+          }
+        }
+      }
+    },
+    "/receipts/{id}": {
+      "parameters": [
+        { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "tags": ["receipts"],
+        "summary": "Receipt detail, including processing stage and validation checks",
+        "responses": {
+          "200": {
+            "description": "Receipt",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
+          },
+          "404": {
+            "description": "Unknown receipt",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["receipts"],
+        "summary": "Save corrected fields; validation re-runs",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ReceiptUpdate" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated receipt with fresh checks",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
+          },
+          "422": {
+            "description": "Invalid fields",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/receipts/{id}/approve": {
+      "post": {
+        "tags": ["receipts"],
+        "summary": "Approve a receipt",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Approved receipt",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
+          },
+          "409": {
+            "description": "Not in a reviewable state",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/receipts/{id}/reject": {
+      "post": {
+        "tags": ["receipts"],
+        "summary": "Reject a receipt",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rejected receipt",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
+          },
+          "409": {
+            "description": "Not in a reviewable state",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    }
+  }
+}
