@@ -1,6 +1,13 @@
 import { config } from "@/lib/config";
 import { formatMoney } from "@/lib/format";
-import type { ExtractedData, Receipt, ReceiptStatus, ReceiptSummary, Sample, ValidationCheck } from "./types";
+import type {
+  ExtractedData,
+  Receipt,
+  ReceiptStatus,
+  ReceiptSummary,
+  Sample,
+  ValidationCheck,
+} from "./types";
 
 /**
  * In-browser stand-in for the FastAPI backend: used when NEXT_PUBLIC_API_URL is empty and by
@@ -76,7 +83,9 @@ const fixtures: Record<string, { data: ExtractedData; confidence: number }> = {
       tax: null,
       total: 22.4,
       category: "Health",
-      lineItems: [{ description: "Ibuprofen 200 mg", quantity: 1, unitPrice: 22.4, lineTotal: 22.4 }],
+      lineItems: [
+        { description: "Ibuprofen 200 mg", quantity: 1, unitPrice: 22.4, lineTotal: 22.4 },
+      ],
     },
   },
 };
@@ -87,7 +96,8 @@ const store = new Map<string, Stored>();
 let seeded = false;
 
 const round = (value: number) => Math.round(value * 100) / 100;
-const sum = (values: (number | null)[]) => round(values.reduce<number>((total, v) => total + (v ?? 0), 0));
+const sum = (values: (number | null)[]) =>
+  round(values.reduce<number>((total, v) => total + (v ?? 0), 0));
 
 export function runChecks(data: ExtractedData): ValidationCheck[] {
   const itemSum = sum(data.lineItems.map((item) => item.lineTotal));
@@ -133,12 +143,20 @@ export function runChecks(data: ExtractedData): ValidationCheck[] {
       rule: "vendor_and_date_present",
       description: "A vendor and a date were found",
       passed: Boolean(data.vendor) && Boolean(data.date),
-      details: !data.vendor ? "No vendor was found." : !data.date ? "No date was found." : undefined,
+      details: !data.vendor
+        ? "No vendor was found."
+        : !data.date
+          ? "No date was found."
+          : undefined,
     },
   ];
 }
 
-function decide(checks: ValidationCheck[], confidence: number, status?: ReceiptStatus): ReceiptStatus {
+function decide(
+  checks: ValidationCheck[],
+  confidence: number,
+  status?: ReceiptStatus,
+): ReceiptStatus {
   if (status && status !== "processing") return status;
   const allPassed = checks.every((check) => check.passed);
   return allPassed && confidence >= config.confidenceThreshold ? "auto_approved" : "needs_review";
@@ -200,7 +218,12 @@ function stored(id: string): Receipt | undefined {
   if (entry.receipt.status !== "processing") return entry.receipt;
   const elapsed = Date.now() - entry.startedAt;
   if (elapsed >= PROCESSING_MS) return entry.receipt;
-  const stage = elapsed < PROCESSING_MS * 0.35 ? "uploading" : elapsed < PROCESSING_MS * 0.7 ? "extracting" : "validating";
+  const stage =
+    elapsed < PROCESSING_MS * 0.35
+      ? "uploading"
+      : elapsed < PROCESSING_MS * 0.7
+        ? "extracting"
+        : "validating";
   return { ...entry.receipt, status: "processing", stage };
 }
 
@@ -219,7 +242,9 @@ function summary(receipt: Receipt): ReceiptSummary {
     failureReason:
       receipt.failureReason ??
       receipt.checks.find((check) => !check.passed)?.details ??
-      (receipt.status === "needs_review" && receipt.confidence !== null && receipt.confidence < config.confidenceThreshold
+      (receipt.status === "needs_review" &&
+      receipt.confidence !== null &&
+      receipt.confidence < config.confidenceThreshold
         ? `Confidence is ${receipt.confidence.toFixed(2)}, below the ${config.confidenceThreshold.toFixed(2)} review threshold.`
         : null),
   };
@@ -232,7 +257,10 @@ function startProcessing(receipt: Receipt): Receipt {
 }
 
 function titleFromFilename(filename: string): string {
-  const base = filename.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+  const base = filename
+    .replace(/\.[^.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .trim();
   if (!base) return "Receipt";
   return base.replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -280,7 +308,13 @@ export const mockFetch: typeof fetch = async (input, init) => {
     const id = decodeURIComponent(sampleProcess[1]!);
     const fixture = fixtures[id];
     if (!fixture) return failure(404, "not_found", "Unknown sample.");
-    const receipt = buildReceipt(crypto.randomUUID(), `${id}.jpg`, "jpg", fixture.data, fixture.confidence);
+    const receipt = buildReceipt(
+      crypto.randomUUID(),
+      `${id}.jpg`,
+      "jpg",
+      fixture.data,
+      fixture.confidence,
+    );
     return json(startProcessing(receipt), 202);
   }
 
@@ -312,7 +346,11 @@ export const mockFetch: typeof fetch = async (input, init) => {
         ...entry.receipt,
         data: body.data,
         checks,
-        status: decide(checks, entry.receipt.confidence ?? 0, entry.receipt.status === "processing" ? undefined : entry.receipt.status),
+        status: decide(
+          checks,
+          entry.receipt.confidence ?? 0,
+          entry.receipt.status === "processing" ? undefined : entry.receipt.status,
+        ),
         failureReason: null,
       };
       entry.receipt = updated;
@@ -323,19 +361,29 @@ export const mockFetch: typeof fetch = async (input, init) => {
   if (method === "GET" && path === "/receipts") {
     const status = url.searchParams.get("status");
     const category = url.searchParams.get("category");
+    const q = url.searchParams.get("q")?.trim().toLowerCase();
     const sort = url.searchParams.get("sort") ?? "date";
     const order = url.searchParams.get("order") ?? "desc";
+    const limit = Number(url.searchParams.get("limit") ?? 50);
+    const offset = Number(url.searchParams.get("offset") ?? 0);
     const items = [...store.values()]
       .map((entry) => stored(entry.receipt.id) ?? entry.receipt)
       .map(summary)
       .filter((item) => (status ? item.status === status : true))
       .filter((item) => (category ? item.category === category : true))
+      .filter(
+        (item) =>
+          !q || item.vendor?.toLowerCase().includes(q) || item.filename.toLowerCase().includes(q),
+      )
       .sort((a, b) => {
-        const pick = sort === "total" ? (r: ReceiptSummary) => r.total ?? 0 : (r: ReceiptSummary) => Date.parse(r.uploadedAt);
+        const pick =
+          sort === "total"
+            ? (r: ReceiptSummary) => r.total ?? 0
+            : (r: ReceiptSummary) => Date.parse(r.uploadedAt);
         const delta = pick(a) - pick(b);
         return order === "asc" ? delta : -delta;
       });
-    return json({ items, total: items.length });
+    return json({ items: items.slice(offset, offset + limit), total: items.length });
   }
 
   if (method === "POST" && path === "/upload") {
@@ -343,7 +391,8 @@ export const mockFetch: typeof fetch = async (input, init) => {
     const file = form.get("file");
     if (!(file instanceof File)) return failure(400, "invalid", "No file supplied.");
     const { data, confidence } = uploadData(file.name);
-    const type = file.type === "application/pdf" ? "pdf" : file.type === "image/png" ? "png" : "jpg";
+    const type =
+      file.type === "application/pdf" ? "pdf" : file.type === "image/png" ? "png" : "jpg";
     const receipt = buildReceipt(crypto.randomUUID(), file.name, type, data, confidence);
     return json(startProcessing(receipt), 202);
   }

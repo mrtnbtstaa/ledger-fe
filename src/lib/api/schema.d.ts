@@ -11,29 +11,44 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Readiness probe. Wakes a sleeping backend. */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Ready */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Health"];
-                    };
-                };
-            };
-        };
+        /** Health */
+        get: operations["health_health_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/maintenance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Maintenance */
+        post: operations["maintenance_admin_maintenance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Receipt */
+        post: operations["upload_receipt_upload_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -47,27 +62,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List built-in sample receipts */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Samples */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Sample"][];
-                    };
-                };
-            };
-        };
+        /** List Samples */
+        get: operations["list_samples_samples_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -85,126 +81,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Process a sample receipt */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    sampleId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Accepted for processing */
-                202: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Receipt"];
-                    };
-                };
-                /** @description Unknown sample */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Rate limited */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/upload": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Upload a receipt image or PDF */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "multipart/form-data": {
-                        /** Format: binary */
-                        file: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Accepted for processing */
-                202: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Receipt"];
-                    };
-                };
-                /** @description Invalid upload */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description File too large */
-                413: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Unsupported file type */
-                415: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Rate limited */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
+        /** Process Sample */
+        post: operations["process_sample_samples__sampleId__process_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -218,32 +96,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List receipts */
-        get: {
-            parameters: {
-                query?: {
-                    status?: components["schemas"]["ReceiptStatus"];
-                    category?: string;
-                    sort?: "date" | "total";
-                    order?: "asc" | "desc";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Receipts */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ReceiptList"];
-                    };
-                };
-            };
-        };
+        /** List Receipts */
+        get: operations["list_receipts_receipts_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -256,84 +110,35 @@ export interface paths {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        /** Receipt detail, including processing stage and validation checks */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Receipt */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Receipt"];
-                    };
-                };
-                /** @description Unknown receipt */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
+        /** Get Receipt */
+        get: operations["get_receipt_receipts__id__get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Save corrected fields; validation re-runs */
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ReceiptUpdate"];
-                };
-            };
-            responses: {
-                /** @description Updated receipt with fresh checks */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Receipt"];
-                    };
-                };
-                /** @description Invalid fields */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
+        /** Update Receipt */
+        patch: operations["update_receipt_receipts__id__patch"];
+        trace?: never;
+    };
+    "/receipts/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
+        /** Get Receipt File */
+        get: operations["get_receipt_file_receipts__id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/receipts/{id}/approve": {
@@ -345,38 +150,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Approve a receipt */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Approved receipt */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Receipt"];
-                    };
-                };
-                /** @description Not in a reviewable state */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
+        /** Approve Receipt */
+        post: operations["approve_receipt_receipts__id__approve_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -392,38 +167,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reject a receipt */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Rejected receipt */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Receipt"];
-                    };
-                };
-                /** @description Not in a reviewable state */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
+        /** Reject Receipt */
+        post: operations["reject_receipt_receipts__id__reject_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -434,100 +179,196 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        Error: {
-            error: {
-                /**
-                 * @example rate_limited
-                 * @example unsupported_type
-                 */
-                code: string;
-                message: string;
-                /** @description Seconds until the client may retry. */
-                retryAfter?: number;
-            };
+        /** Body_upload_receipt_upload_post */
+        Body_upload_receipt_upload_post: {
+            /** File */
+            file: string;
         };
-        LineItem: {
-            description: string | null;
-            quantity: number | null;
-            unitPrice: number | null;
-            lineTotal: number | null;
-        };
+        /** ExtractedData */
         ExtractedData: {
+            /** Vendor */
             vendor: string | null;
-            /** @description ISO 8601 date when normalized. */
+            /** Date */
             date: string | null;
-            /** @description The date as printed on the receipt. */
+            /** Dateraw */
             dateRaw: string | null;
-            /** @description ISO 4217 code. */
+            /** Currency */
             currency: string | null;
+            /** Subtotal */
             subtotal: number | null;
+            /** Tax */
             tax: number | null;
+            /** Total */
             total: number | null;
+            /** Category */
             category: string | null;
+            /** Lineitems */
             lineItems: components["schemas"]["LineItem"][];
         };
-        ValidationCheck: {
-            /** @example line_items_sum_to_subtotal */
-            rule: string;
-            description: string;
-            passed: boolean;
-            details?: string | null;
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
         };
-        /** @enum {string} */
-        ReceiptStatus: "processing" | "auto_approved" | "needs_review" | "approved" | "rejected" | "failed";
-        /** @enum {string} */
-        ReceiptStage: "uploading" | "extracting" | "validating" | "done";
+        /** Health */
+        Health: {
+            /** Status */
+            status: string;
+            /** Version */
+            version: string;
+            /**
+             * Time
+             * Format: date-time
+             */
+            time: string;
+            /** Db */
+            db: string;
+        };
+        /** LineItem */
+        LineItem: {
+            /** Description */
+            description: string | null;
+            /** Quantity */
+            quantity: number | null;
+            /** Unitprice */
+            unitPrice: number | null;
+            /** Linetotal */
+            lineTotal: number | null;
+            type?: components["schemas"]["LineItemType"] | null;
+        };
+        /**
+         * LineItemType
+         * @enum {string}
+         */
+        LineItemType: "item" | "discount" | "tip" | "fee";
+        /** MaintenanceResult */
+        MaintenanceResult: {
+            /** Purgedfiles */
+            purgedFiles: number;
+            /** Purgedrecords */
+            purgedRecords: number;
+            /** Failedstuck */
+            failedStuck: number;
+        };
+        /** Receipt */
         Receipt: {
+            /** Id */
             id: string;
+            /** Filename */
             filename: string;
-            /** @enum {string} */
-            fileType: "jpg" | "png" | "pdf";
-            /** Format: date-time */
+            /** Filetype */
+            fileType: string;
+            /**
+             * Uploadedat
+             * Format: date-time
+             */
             uploadedAt: string;
             status: components["schemas"]["ReceiptStatus"];
-            stage?: components["schemas"]["ReceiptStage"];
+            stage?: components["schemas"]["ReceiptStage"] | null;
+            /** Confidence */
             confidence: number | null;
-            /** @description Null once the retained file has expired. */
+            /** Failurereason */
+            failureReason: string | null;
+            /** Edited */
+            edited?: boolean | null;
+            /** Cached */
+            cached: boolean;
+            /** Fileurl */
             fileUrl: string | null;
-            /** Format: date-time */
+            /** Fileexpiresat */
             fileExpiresAt: string | null;
             data: components["schemas"]["ExtractedData"] | null;
+            /** Checks */
             checks: components["schemas"]["ValidationCheck"][];
-            cached: boolean;
-            /** @description Safe, human-readable reason when status is failed. */
-            failureReason?: string | null;
         };
-        ReceiptSummary: {
-            id: string;
-            filename: string;
-            /** Format: date-time */
-            uploadedAt: string;
-            vendor: string | null;
-            date: string | null;
-            total: number | null;
-            currency: string | null;
-            category: string | null;
-            status: components["schemas"]["ReceiptStatus"];
-            confidence: number | null;
-            failureReason: string | null;
-        };
+        /** ReceiptList */
         ReceiptList: {
+            /** Items */
             items: components["schemas"]["ReceiptSummary"][];
+            /** Total */
             total: number;
         };
-        Sample: {
+        /**
+         * ReceiptStage
+         * @enum {string}
+         */
+        ReceiptStage: "uploading" | "extracting" | "validating" | "done";
+        /**
+         * ReceiptStatus
+         * @enum {string}
+         */
+        ReceiptStatus: "processing" | "auto_approved" | "needs_review" | "approved" | "rejected" | "failed";
+        /** ReceiptSummary */
+        ReceiptSummary: {
+            /** Id */
             id: string;
-            label: string;
-            description: string;
-            /** @enum {string} */
-            expected: "clean" | "fails_validation";
+            /** Filename */
+            filename: string;
+            /**
+             * Uploadedat
+             * Format: date-time
+             */
+            uploadedAt: string;
+            /** Vendor */
+            vendor: string | null;
+            /** Date */
+            date: string | null;
+            /** Total */
+            total: number | null;
+            /** Currency */
+            currency: string | null;
+            /** Category */
+            category: string | null;
+            status: components["schemas"]["ReceiptStatus"];
+            /** Confidence */
+            confidence: number | null;
+            /** Failurereason */
+            failureReason: string | null;
         };
+        /** ReceiptUpdate */
         ReceiptUpdate: {
             data: components["schemas"]["ExtractedData"];
         };
-        Health: {
-            /** @enum {string} */
-            status: "ok";
+        /** Sample */
+        Sample: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Description */
+            description: string;
+            expected: components["schemas"]["SampleExpected"];
+        };
+        /**
+         * SampleExpected
+         * @enum {string}
+         */
+        SampleExpected: "clean" | "fails_validation";
+        /** ValidationCheck */
+        ValidationCheck: {
+            /** Rule */
+            rule: string;
+            /** Description */
+            description: string;
+            /** Passed */
+            passed: boolean;
+            /** Skipped */
+            skipped?: boolean | null;
+            /** Details */
+            details?: string | null;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
     };
     responses: never;
@@ -537,4 +378,342 @@ export interface components {
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    health_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    maintenance_admin_maintenance_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaintenanceResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_receipt_upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_receipt_upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_samples_samples_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sample"][];
+                };
+            };
+        };
+    };
+    process_sample_samples__sampleId__process_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sampleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_receipts_receipts_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["ReceiptStatus"] | null;
+                category?: string | null;
+                q?: string | null;
+                sort?: string;
+                order?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_receipt_receipts__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_receipt_receipts__id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Review-Passcode"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReceiptUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_receipt_file_receipts__id__file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_receipt_receipts__id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Review-Passcode"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_receipt_receipts__id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Review-Passcode"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+}

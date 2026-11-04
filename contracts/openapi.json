@@ -2,39 +2,666 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Receipt Processor API",
-    "version": "0.1.0",
-    "description": "Frontend-consumed contract. Hand-authored from plan.md; reconcile with the backend's exported schema with `npm run gen:api`."
+    "version": "0.1.0"
   },
-  "servers": [{ "url": "http://localhost:8000" }],
-  "tags": [{ "name": "receipts" }],
-  "components": {
-    "schemas": {
-      "Error": {
-        "type": "object",
-        "required": ["error"],
-        "properties": {
-          "error": {
-            "type": "object",
-            "required": ["code", "message"],
-            "properties": {
-              "code": { "type": "string", "examples": ["rate_limited", "unsupported_type"] },
-              "message": { "type": "string" },
-              "retryAfter": { "type": "integer", "description": "Seconds until the client may retry." }
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/maintenance": {
+      "post": {
+        "summary": "Maintenance",
+        "operationId": "maintenance_admin_maintenance_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload": {
+      "post": {
+        "summary": "Upload Receipt",
+        "operationId": "upload_receipt_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_receipt_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/samples": {
+      "get": {
+        "summary": "List Samples",
+        "operationId": "list_samples_samples_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Sample"
+                  },
+                  "type": "array",
+                  "title": "Response List Samples Samples Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/samples/{sampleId}/process": {
+      "post": {
+        "summary": "Process Sample",
+        "operationId": "process_sample_samples__sampleId__process_post",
+        "parameters": [
+          {
+            "name": "sampleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sampleid"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipts": {
+      "get": {
+        "summary": "List Receipts",
+        "operationId": "list_receipts_receipts_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ReceiptStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(date|total)$",
+              "default": "date",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(asc|desc)$",
+              "default": "desc",
+              "title": "Order"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipts/{id}": {
+      "get": {
+        "summary": "Get Receipt",
+        "operationId": "get_receipt_receipts__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
             }
           }
         }
       },
-      "LineItem": {
-        "type": "object",
-        "required": ["description", "quantity", "unitPrice", "lineTotal"],
-        "properties": {
-          "description": { "type": ["string", "null"] },
-          "quantity": { "type": ["number", "null"] },
-          "unitPrice": { "type": ["number", "null"] },
-          "lineTotal": { "type": ["number", "null"] }
+      "patch": {
+        "summary": "Update Receipt",
+        "operationId": "update_receipt_receipts__id__patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "X-Review-Passcode",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Review-Passcode"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
         }
+      }
+    },
+    "/receipts/{id}/file": {
+      "get": {
+        "summary": "Get Receipt File",
+        "operationId": "get_receipt_file_receipts__id__file_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipts/{id}/approve": {
+      "post": {
+        "summary": "Approve Receipt",
+        "operationId": "approve_receipt_receipts__id__approve_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "X-Review-Passcode",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Review-Passcode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipts/{id}/reject": {
+      "post": {
+        "summary": "Reject Receipt",
+        "operationId": "reject_receipt_receipts__id__reject_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "X-Review-Passcode",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Review-Passcode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_upload_receipt_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_receipt_upload_post"
       },
       "ExtractedData": {
+        "properties": {
+          "vendor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "dateRaw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dateraw"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "subtotal": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtotal"
+          },
+          "tax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "lineItems": {
+            "items": {
+              "$ref": "#/components/schemas/LineItem"
+            },
+            "type": "array",
+            "title": "Lineitems"
+          }
+        },
         "type": "object",
         "required": [
           "vendor",
@@ -47,34 +674,259 @@
           "category",
           "lineItems"
         ],
-        "properties": {
-          "vendor": { "type": ["string", "null"] },
-          "date": { "type": ["string", "null"], "description": "ISO 8601 date when normalized." },
-          "dateRaw": { "type": ["string", "null"], "description": "The date as printed on the receipt." },
-          "currency": { "type": ["string", "null"], "description": "ISO 4217 code." },
-          "subtotal": { "type": ["number", "null"] },
-          "tax": { "type": ["number", "null"] },
-          "total": { "type": ["number", "null"] },
-          "category": { "type": ["string", "null"] },
-          "lineItems": { "type": "array", "items": { "$ref": "#/components/schemas/LineItem" } }
-        }
+        "title": "ExtractedData"
       },
-      "ValidationCheck": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
         "type": "object",
-        "required": ["rule", "description", "passed"],
+        "title": "HTTPValidationError"
+      },
+      "Health": {
         "properties": {
-          "rule": { "type": "string", "examples": ["line_items_sum_to_subtotal"] },
-          "description": { "type": "string" },
-          "passed": { "type": "boolean" },
-          "details": { "type": ["string", "null"] }
-        }
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Time"
+          },
+          "db": {
+            "type": "string",
+            "title": "Db"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "time",
+          "db"
+        ],
+        "title": "Health"
       },
-      "ReceiptStatus": {
+      "LineItem": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unitPrice": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unitprice"
+          },
+          "lineTotal": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linetotal"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineItemType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "description",
+          "quantity",
+          "unitPrice",
+          "lineTotal"
+        ],
+        "title": "LineItem"
+      },
+      "LineItemType": {
         "type": "string",
-        "enum": ["processing", "auto_approved", "needs_review", "approved", "rejected", "failed"]
+        "enum": [
+          "item",
+          "discount",
+          "tip",
+          "fee"
+        ],
+        "title": "LineItemType"
       },
-      "ReceiptStage": { "type": "string", "enum": ["uploading", "extracting", "validating", "done"] },
+      "MaintenanceResult": {
+        "properties": {
+          "purgedFiles": {
+            "type": "integer",
+            "title": "Purgedfiles"
+          },
+          "purgedRecords": {
+            "type": "integer",
+            "title": "Purgedrecords"
+          },
+          "failedStuck": {
+            "type": "integer",
+            "title": "Failedstuck"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purgedFiles",
+          "purgedRecords",
+          "failedStuck"
+        ],
+        "title": "MaintenanceResult"
+      },
       "Receipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "fileType": {
+            "type": "string",
+            "title": "Filetype"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Uploadedat"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReceiptStatus"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptStage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "failureReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failurereason"
+          },
+          "edited": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached"
+          },
+          "fileUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fileurl"
+          },
+          "fileExpiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fileexpiresat"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtractedData"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationCheck"
+            },
+            "type": "array",
+            "title": "Checks"
+          }
+        },
         "type": "object",
         "required": [
           "id",
@@ -83,29 +935,155 @@
           "uploadedAt",
           "status",
           "confidence",
+          "failureReason",
+          "cached",
           "fileUrl",
           "fileExpiresAt",
           "data",
-          "checks",
-          "cached"
+          "checks"
         ],
+        "title": "Receipt"
+      },
+      "ReceiptList": {
         "properties": {
-          "id": { "type": "string" },
-          "filename": { "type": "string" },
-          "fileType": { "type": "string", "enum": ["jpg", "png", "pdf"] },
-          "uploadedAt": { "type": "string", "format": "date-time" },
-          "status": { "$ref": "#/components/schemas/ReceiptStatus" },
-          "stage": { "$ref": "#/components/schemas/ReceiptStage" },
-          "confidence": { "type": ["number", "null"] },
-          "fileUrl": { "type": ["string", "null"], "description": "Null once the retained file has expired." },
-          "fileExpiresAt": { "type": ["string", "null"], "format": "date-time" },
-          "data": { "anyOf": [{ "$ref": "#/components/schemas/ExtractedData" }, { "type": "null" }] },
-          "checks": { "type": "array", "items": { "$ref": "#/components/schemas/ValidationCheck" } },
-          "cached": { "type": "boolean" },
-          "failureReason": { "type": ["string", "null"], "description": "Safe, human-readable reason when status is failed." }
-        }
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReceiptSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ReceiptList"
+      },
+      "ReceiptStage": {
+        "type": "string",
+        "enum": [
+          "uploading",
+          "extracting",
+          "validating",
+          "done"
+        ],
+        "title": "ReceiptStage"
+      },
+      "ReceiptStatus": {
+        "type": "string",
+        "enum": [
+          "processing",
+          "auto_approved",
+          "needs_review",
+          "approved",
+          "rejected",
+          "failed"
+        ],
+        "title": "ReceiptStatus"
       },
       "ReceiptSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Uploadedat"
+          },
+          "vendor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReceiptStatus"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "failureReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failurereason"
+          }
+        },
         "type": "object",
         "required": [
           "id",
@@ -120,241 +1098,139 @@
           "confidence",
           "failureReason"
         ],
-        "properties": {
-          "id": { "type": "string" },
-          "filename": { "type": "string" },
-          "uploadedAt": { "type": "string", "format": "date-time" },
-          "vendor": { "type": ["string", "null"] },
-          "date": { "type": ["string", "null"] },
-          "total": { "type": ["number", "null"] },
-          "currency": { "type": ["string", "null"] },
-          "category": { "type": ["string", "null"] },
-          "status": { "$ref": "#/components/schemas/ReceiptStatus" },
-          "confidence": { "type": ["number", "null"] },
-          "failureReason": { "type": ["string", "null"] }
-        }
-      },
-      "ReceiptList": {
-        "type": "object",
-        "required": ["items", "total"],
-        "properties": {
-          "items": { "type": "array", "items": { "$ref": "#/components/schemas/ReceiptSummary" } },
-          "total": { "type": "integer" }
-        }
-      },
-      "Sample": {
-        "type": "object",
-        "required": ["id", "label", "description", "expected"],
-        "properties": {
-          "id": { "type": "string" },
-          "label": { "type": "string" },
-          "description": { "type": "string" },
-          "expected": { "type": "string", "enum": ["clean", "fails_validation"] }
-        }
+        "title": "ReceiptSummary"
       },
       "ReceiptUpdate": {
-        "type": "object",
-        "required": ["data"],
-        "properties": { "data": { "$ref": "#/components/schemas/ExtractedData" } }
-      },
-      "Health": {
-        "type": "object",
-        "required": ["status"],
-        "properties": { "status": { "type": "string", "enum": ["ok"] } }
-      }
-    }
-  },
-  "paths": {
-    "/health": {
-      "get": {
-        "tags": ["receipts"],
-        "summary": "Readiness probe. Wakes a sleeping backend.",
-        "responses": {
-          "200": {
-            "description": "Ready",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } }
-          }
-        }
-      }
-    },
-    "/samples": {
-      "get": {
-        "tags": ["receipts"],
-        "summary": "List built-in sample receipts",
-        "responses": {
-          "200": {
-            "description": "Samples",
-            "content": {
-              "application/json": {
-                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Sample" } }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/samples/{sampleId}/process": {
-      "post": {
-        "tags": ["receipts"],
-        "summary": "Process a sample receipt",
-        "parameters": [
-          { "name": "sampleId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "202": {
-            "description": "Accepted for processing",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
-          },
-          "404": {
-            "description": "Unknown sample",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-          },
-          "429": {
-            "description": "Rate limited",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-          }
-        }
-      }
-    },
-    "/upload": {
-      "post": {
-        "tags": ["receipts"],
-        "summary": "Upload a receipt image or PDF",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": ["file"],
-                "properties": { "file": { "type": "string", "format": "binary" } }
-              }
-            }
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ExtractedData"
           }
         },
-        "responses": {
-          "202": {
-            "description": "Accepted for processing",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
-          },
-          "400": {
-            "description": "Invalid upload",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-          },
-          "413": {
-            "description": "File too large",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-          },
-          "415": {
-            "description": "Unsupported file type",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-          },
-          "429": {
-            "description": "Rate limited",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-          }
-        }
-      }
-    },
-    "/receipts": {
-      "get": {
-        "tags": ["receipts"],
-        "summary": "List receipts",
-        "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "schema": { "$ref": "#/components/schemas/ReceiptStatus" }
-          },
-          { "name": "category", "in": "query", "schema": { "type": "string" } },
-          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["date", "total"] } },
-          { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"] } }
+        "type": "object",
+        "required": [
+          "data"
         ],
-        "responses": {
-          "200": {
-            "description": "Receipts",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/ReceiptList" } }
-            }
-          }
-        }
-      }
-    },
-    "/receipts/{id}": {
-      "parameters": [
-        { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-      ],
-      "get": {
-        "tags": ["receipts"],
-        "summary": "Receipt detail, including processing stage and validation checks",
-        "responses": {
-          "200": {
-            "description": "Receipt",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
-          },
-          "404": {
-            "description": "Unknown receipt",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-          }
-        }
+        "title": "ReceiptUpdate"
       },
-      "patch": {
-        "tags": ["receipts"],
-        "summary": "Save corrected fields; validation re-runs",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/ReceiptUpdate" } }
+      "Sample": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "expected": {
+            "$ref": "#/components/schemas/SampleExpected"
           }
         },
-        "responses": {
-          "200": {
-            "description": "Updated receipt with fresh checks",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
-          },
-          "422": {
-            "description": "Invalid fields",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-          }
-        }
-      }
-    },
-    "/receipts/{id}/approve": {
-      "post": {
-        "tags": ["receipts"],
-        "summary": "Approve a receipt",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "description",
+          "expected"
         ],
-        "responses": {
-          "200": {
-            "description": "Approved receipt",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
-          },
-          "409": {
-            "description": "Not in a reviewable state",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-          }
-        }
-      }
-    },
-    "/receipts/{id}/reject": {
-      "post": {
-        "tags": ["receipts"],
-        "summary": "Reject a receipt",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        "title": "Sample"
+      },
+      "SampleExpected": {
+        "type": "string",
+        "enum": [
+          "clean",
+          "fails_validation"
         ],
-        "responses": {
-          "200": {
-            "description": "Rejected receipt",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Receipt" } } }
+        "title": "SampleExpected"
+      },
+      "ValidationCheck": {
+        "properties": {
+          "rule": {
+            "type": "string",
+            "title": "Rule"
           },
-          "409": {
-            "description": "Not in a reviewable state",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          },
+          "skipped": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skipped"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
           }
-        }
+        },
+        "type": "object",
+        "required": [
+          "rule",
+          "description",
+          "passed"
+        ],
+        "title": "ValidationCheck"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
       }
     }
   }

@@ -24,7 +24,7 @@ export default function HomePage() {
   const { status } = useBackendStatus();
   const ready = status === "ready";
 
-  const samples = useSamples();
+  const samples = useSamples(ready);
   const processSample = useProcessSample();
   const upload = useUploadReceipt();
 

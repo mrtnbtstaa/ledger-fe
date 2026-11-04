@@ -9,7 +9,9 @@ test("US1: a sample processes end to end without any setup", async ({ page }) =>
   await page.goto("/");
   await page.getByRole("button", { name: /Blue Bottle Coffee/ }).click();
 
-  await expect(page.getByRole("heading", { name: "Blue Bottle Coffee" })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: "Blue Bottle Coffee" })).toBeVisible({
+    timeout: 20_000,
+  });
   await expect(page.getByText("Auto-approved").first()).toBeVisible();
   await expect(page.getByText("Line items add up to the subtotal")).toBeVisible();
   await expect(page.getByText("$14.34")).toBeVisible();
@@ -26,9 +28,13 @@ test("US3: a failing check is shown with the numbers that disagree", async ({ pa
 
 test("US2: an uploaded file is processed", async ({ page }) => {
   await page.goto("/");
-  await page.getByTestId("file-input").setInputFiles({ name: "corner-store.png", mimeType: "image/png", buffer: png });
+  await page
+    .getByTestId("file-input")
+    .setInputFiles({ name: "corner-store.png", mimeType: "image/png", buffer: png });
 
-  await expect(page.getByRole("heading", { name: "Corner Store" })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: "Corner Store" })).toBeVisible({
+    timeout: 20_000,
+  });
   await expect(page.getByText("Auto-approved").first()).toBeVisible();
 });
 
@@ -36,10 +42,30 @@ test("US2: an oversized file is rejected before upload", async ({ page }) => {
   await page.goto("/");
   await page
     .getByTestId("file-input")
-    .setInputFiles({ name: "huge.png", mimeType: "image/png", buffer: Buffer.alloc(6 * 1024 * 1024) });
+    .setInputFiles({
+      name: "huge.png",
+      mimeType: "image/png",
+      buffer: Buffer.alloc(6 * 1024 * 1024),
+    });
 
   await expect(page.getByText(/larger than 5 MB/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Huge" })).toHaveCount(0);
+});
+
+test("US6: history search narrows the list", async ({ page }) => {
+  await page.goto("/history");
+  await page.getByPlaceholder("Vendor or file name").fill("pharmacy");
+
+  await expect(page.getByRole("link", { name: /Corner Pharmacy/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Blue Bottle Coffee/ })).toHaveCount(0);
+});
+
+test("US7: review search narrows the queue", async ({ page }) => {
+  await page.goto("/review");
+  await page.getByPlaceholder("Vendor or file name").fill("harbor");
+
+  await expect(page.getByRole("link", { name: /Harbor Hardware/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Corner Pharmacy/ })).toHaveCount(0);
 });
 
 test("US5: a flagged receipt can be corrected and approved", async ({ page }) => {
@@ -59,7 +85,9 @@ test("US8: the flow works at 375px without sideways scrolling", async ({ page })
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto("/");
   await page.getByRole("button", { name: /Blue Bottle Coffee/ }).click();
-  await expect(page.getByRole("heading", { name: "Blue Bottle Coffee" })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: "Blue Bottle Coffee" })).toBeVisible({
+    timeout: 20_000,
+  });
 
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

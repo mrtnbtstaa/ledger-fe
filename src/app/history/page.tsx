@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
+import { Pagination } from "@/components/common/Pagination";
 import { ReceiptList } from "@/components/history/ReceiptList";
 import { useReceipts } from "@/hooks/useReceipts";
 import { withRetryHint } from "@/lib/api/errors";
 import type { ReceiptStatus } from "@/lib/api/types";
 import { STATUS } from "@/lib/status";
+
+const PAGE_SIZE = 10;
 
 const sortOptions = {
   "date-desc": { label: "Newest first", sort: "date", order: "desc" },
@@ -19,20 +22,25 @@ const sortOptions = {
 
 type SortKey = keyof typeof sortOptions;
 
-const select = "min-h-11 rounded-sm border border-line bg-surface px-2 text-sm";
+const field = "min-h-11 rounded-sm border border-line bg-surface px-2 text-sm";
 
 export default function HistoryPage() {
   const [status, setStatus] = useState<"all" | ReceiptStatus>("all");
   const [category, setCategory] = useState("");
+  const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("date-desc");
+  const [offset, setOffset] = useState(0);
   const { sort, order } = sortOptions[sortKey];
 
-  const everything = useReceipts({ sort, order });
+  const everything = useReceipts({ sort, order, limit: 200 });
   const list = useReceipts({
     status: status === "all" ? undefined : status,
     category: category || undefined,
+    q: query.trim() || undefined,
     sort,
     order,
+    limit: PAGE_SIZE,
+    offset,
   });
 
   const categories = [
@@ -43,6 +51,10 @@ export default function HistoryPage() {
     ),
   ].sort();
 
+  const total = list.data?.total ?? 0;
+  const first = total === 0 ? 0 : offset + 1;
+  const last = Math.min(offset + PAGE_SIZE, total);
+
   return (
     <div className="mx-auto w-full max-w-[1080px] px-4 py-8 sm:px-6 lg:px-8">
       <h1 className="font-serif text-3xl">History</h1>
@@ -52,8 +64,29 @@ export default function HistoryPage() {
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-sm text-ink-muted">
+          Search
+          <input
+            type="search"
+            maxLength={100}
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setOffset(0);
+            }}
+            placeholder="Vendor or file name"
+            className={`${field} w-56`}
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-ink-muted">
           Status
-          <select className={select} value={status} onChange={(event) => setStatus(event.target.value as "all" | ReceiptStatus)}>
+          <select
+            className={field}
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value as "all" | ReceiptStatus);
+              setOffset(0);
+            }}
+          >
             <option value="all">All</option>
             {(Object.keys(STATUS) as ReceiptStatus[]).map((value) => (
               <option key={value} value={value}>
@@ -64,7 +97,14 @@ export default function HistoryPage() {
         </label>
         <label className="flex items-center gap-2 text-sm text-ink-muted">
           Category
-          <select className={select} value={category} onChange={(event) => setCategory(event.target.value)}>
+          <select
+            className={field}
+            value={category}
+            onChange={(event) => {
+              setCategory(event.target.value);
+              setOffset(0);
+            }}
+          >
             <option value="">All</option>
             {categories.map((value) => (
               <option key={value} value={value}>
@@ -75,7 +115,14 @@ export default function HistoryPage() {
         </label>
         <label className="flex items-center gap-2 text-sm text-ink-muted">
           Sort
-          <select className={select} value={sortKey} onChange={(event) => setSortKey(event.target.value as SortKey)}>
+          <select
+            className={field}
+            value={sortKey}
+            onChange={(event) => {
+              setSortKey(event.target.value as SortKey);
+              setOffset(0);
+            }}
+          >
             {Object.entries(sortOptions).map(([key, option]) => (
               <option key={key} value={key}>
                 {option.label}
@@ -107,7 +154,10 @@ export default function HistoryPage() {
         )}
       </div>
 
-      <p className="mt-4 text-sm text-ink-muted">{list.data?.total ?? 0} receipts</p>
+      <p className="mt-4 text-sm text-ink-muted">
+        {total === 0 ? "0 receipts" : `Showing ${first}–${last} of ${total} receipts`}
+      </p>
+      <Pagination total={total} limit={PAGE_SIZE} offset={offset} onChange={setOffset} />
     </div>
   );
 }

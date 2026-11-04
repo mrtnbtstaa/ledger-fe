@@ -6,11 +6,12 @@ import { call } from "@/lib/api/call";
 import type { ApiFailure } from "@/lib/api/errors";
 import type { Receipt, Sample } from "@/lib/api/types";
 
-export function useSamples() {
+export function useSamples(enabled = true) {
   return useQuery<Sample[], ApiFailure>({
     queryKey: ["samples"],
     queryFn: () => call(() => api.GET("/samples", { signal: readSignal() })),
     staleTime: Infinity,
+    enabled,
   });
 }
 
