@@ -7,11 +7,6 @@ export const metadata: Metadata = {
   description: "How the receipt processor extracts, checks and reviews data, and what its evaluation set shows.",
 };
 
-const accuracy = [
-  { label: "Receipts in the evaluation set", value: config.eval.setSize, suffix: "" },
-  { label: "Field accuracy", value: config.eval.fieldAccuracy, suffix: "%" },
-  { label: "Auto-approved without a reviewer", value: config.eval.autoApprovedShare, suffix: "%" },
-];
 
 export default function AboutPage() {
   return (
@@ -50,29 +45,6 @@ export default function AboutPage() {
         <p className="mt-3 text-sm text-ink-muted">
           Totals are never recomputed in the browser. The server is the only place checks run, so the screen cannot
           disagree with the record.
-        </p>
-      </section>
-
-      <section className="mt-10" aria-labelledby="accuracy">
-        <h2 id="accuracy" className="font-serif text-2xl">
-          Accuracy
-        </h2>
-        <dl className="mt-3 divide-y divide-line border-y border-line text-sm">
-          {accuracy.map((row) => (
-            <div key={row.label} className="flex items-baseline justify-between gap-4 py-2">
-              <dt className="text-ink-muted">{row.label}</dt>
-              <dd className="font-mono tabular-nums">
-                {row.value === null ? (
-                  <span className="italic text-ink-muted">Not published yet</span>
-                ) : (
-                  `${row.value}${row.suffix}`
-                )}
-              </dd>
-            </div>
-          ))}
-        </dl>
-        <p className="mt-2 text-sm text-ink-muted">
-          Only figures from the evaluation set are shown here, never estimates.
         </p>
       </section>
 
