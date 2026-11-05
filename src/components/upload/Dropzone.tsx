@@ -54,7 +54,7 @@ export function Dropzone({ onSelect, disabled, busy, error }: DropzoneProps) {
             <Upload className="size-4" aria-hidden />
             {busy ? "Uploading…" : "Choose a file"}
           </button>
-          <button
+          {/* <button
             type="button"
             className={buttonClass("secondary")}
             onClick={() => camera.current?.click()}
@@ -62,7 +62,7 @@ export function Dropzone({ onSelect, disabled, busy, error }: DropzoneProps) {
           >
             <Camera className="size-4" aria-hidden />
             Take a photo
-          </button>
+          </button> */}
         </div>
       </div>
 

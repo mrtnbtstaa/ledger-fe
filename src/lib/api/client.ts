@@ -8,8 +8,8 @@ export const api = createClient<paths>({
   fetch: config.useMock ? mockFetch : undefined,
 });
 
-const READ_TIMEOUT_MS = 15_000;
-const WRITE_TIMEOUT_MS = 45_000;
+const READ_TIMEOUT_MS = 65_000;  // Wait up to 65 seconds for Render to wake up
+const WRITE_TIMEOUT_MS = 90_000; // Give uploads extra time
 
 /** Per-request deadline; openapi-fetch has none of its own (FR-022). */
 export const readSignal = () => AbortSignal.timeout?.(READ_TIMEOUT_MS);

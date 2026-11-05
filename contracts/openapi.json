@@ -807,13 +807,18 @@
           "failedStuck": {
             "type": "integer",
             "title": "Failedstuck"
+          },
+          "sheetSynced": {
+            "type": "integer",
+            "title": "Sheetsynced"
           }
         },
         "type": "object",
         "required": [
           "purgedFiles",
           "purgedRecords",
-          "failedStuck"
+          "failedStuck",
+          "sheetSynced"
         ],
         "title": "MaintenanceResult"
       },
