@@ -7,7 +7,7 @@ const steps = [
   { title: "Decide", detail: "Clean results are auto-approved; the rest wait for a human." },
 ];
 
-export function PipelineDiagram() {
+export const PipelineDiagram = () => {
   return (
     <ol className="grid gap-2 sm:grid-cols-[repeat(4,minmax(0,1fr))] sm:items-stretch sm:gap-3">
       {steps.map((step, index) => (

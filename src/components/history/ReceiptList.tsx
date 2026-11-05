@@ -11,7 +11,7 @@ type ReceiptListProps = {
 };
 
 /** One markup for both History and the Review queue; rows become stacked records under 640px. */
-export function ReceiptList({ items, showReason = false }: ReceiptListProps) {
+export const ReceiptList = ({ items, showReason = false }: ReceiptListProps) => {
   return (
     <ul className="mt-4 border-t border-line">
       <li
